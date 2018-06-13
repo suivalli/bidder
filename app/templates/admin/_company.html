@@ -1,0 +1,9 @@
+<table class="table table-hover">
+        <tr>
+            <td>
+                <br>
+                <span id="company{{ company.id }}">
+                    <a href="{{ url_for('admin.company', name=company.name) }}"> {{ company.name }}</a></span>
+            </td>
+        </tr>
+    </table>

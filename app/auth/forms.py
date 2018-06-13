@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, RadioField, Label
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 from flask_babel import _, lazy_gettext as _l
 from app.models import User
@@ -19,6 +19,9 @@ class RegistrationForm(FlaskForm):
     password2 = PasswordField(
         _l('Repeat Password'), validators=[DataRequired(),
                                            EqualTo('password')])
+    company = SelectField(_l('Company'), coerce=int)
+    superuser = RadioField(_l('Make user the company\'s administrator?'),
+                           choices=[('True', _l('Yes')), ('False', _l('No'))])
     submit = SubmitField(_l('Register'))
 
     def validate_username(self, username):

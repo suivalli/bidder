@@ -18,33 +18,29 @@
             </div>
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
+                    {% if current_user.admin %}
+                        <li><a href="{{ url_for('admin.index') }}">{{ _('Admin home') }}</a></li>
+                    {% endif %}
                     <li><a href="{{ url_for('main.index') }}">{{ _('Home') }}</a></li>
-                    <li><a href="{{ url_for('main.explore') }}">{{ _('Explore') }}</a></li>
                 </ul>
-                {% if g.search_form %}
-                <form class="navbar-form navbar-left" method="get" action="{{ url_for('main.search') }}">
-                    <div class="form-group">
-                        {{ g.search_form.q(size=20, class='form-control', placeholder=g.search_form.q.label.text) }}
-                    </div>
-                </form>
-                {% endif %}
                 <ul class="nav navbar-nav navbar-right">
                     {% if current_user.is_anonymous %}
                     <li><a href="{{ url_for('auth.login') }}">{{ _('Login') }}</a></li>
                     {% else %}
-                    <li>
-                        <a href="{{ url_for('main.messages') }}">
-                            {{ _('Messages') }}
-                            {% set new_messages = current_user.new_messages() %}
-                            <span id="message_count" class="badge"
-                                  style="visibility: {% if new_messages %}visible
-                                                     {% else %}hidden {% endif %};">
-                                {{ new_messages }}
-                            </span>
-                        </a>
-                    </li>
                     <li><a href="{{ url_for('main.user', username=current_user.username) }}">{{ _('Profile') }}</a></li>
-                    <li><a href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a></li>
+                        {% if current_user.admin %}
+                            <li><a href="{{ url_for('admin.register_company') }}">{{ _('Create new company') }}</a></li>
+                            <li><a href="{{ url_for('auth.register') }}">{{ _('Add new user') }}</a></li>
+                        {% elif current_user.superuser %}
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="ture"
+                                   aria-expanded="false">Company stuff <span class="caret"></span></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="{{ url_for('auth.register') }}">{{ _('Add new user') }}</a></li>
+                                </ul>
+                            </li>
+                        {% endif %}
+                     <li><a href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -127,25 +123,5 @@
                 }
             )
         });
-    function set_message_count(n) {
-            $('#message_count').text(n);
-            $('#message_count').css('visibility', n ? 'visible' : 'hidden');
-        }
-        {% if current_user.is_authenticated %}
-        $(function() {
-            var since = 0;
-            setInterval(function() {
-                $.ajax('{{ url_for('main.notifications') }}?since=' + since).done(
-                    function(notifications) {
-                        for (var i = 0; i < notifications.length; i++) {
-                            if (notifications[i].name == 'unread_message_count')
-                                set_message_count(notifications[i].data);
-                            since = notifications[i].timestamp;
-                        }
-                    }
-                );
-            }, 10000);
-        });
-        {% endif %}
     </script>
 {% endblock %}

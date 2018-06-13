@@ -58,6 +58,35 @@ followers = db.Table(
 )
 
 
+class Company(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), index=True, unique=True, nullable= False)
+    vat_code = db.Column(db.String(20), unique=True)
+    reg_code = db.Column(db.String(20), unique=True)
+
+    create_date = db.Column(db.DateTime, default=datetime.utcnow)
+    email = db.Column(db.String(120), index=True)
+    url = db.Column(db.String(120))
+    logo = db.Column(db.String(120))
+    phone = db.Column(db.String(120))
+
+    address = db.Column(db.String(120))
+    city = db.Column(db.String(120))
+    parish = db.Column(db.String(120))
+    county = db.Column(db.String(120))
+    state = db.Column(db.String(120))
+    zip = db.Column(db.String(120))
+
+    employees = db.relationship('User', foreign_keys='User.company_id',
+                                backref='employee', lazy='dynamic')
+    clients = db.relationship('Client', foreign_keys='Client.company_id',
+                              backref='client', lazy='dynamic')
+    quotes = db.relationship('Quote', foreign_keys='Quote.company_id',
+                             backref='quote', lazy='dynamic')
+    items = db.relationship('Item', foreign_keys='Item.company_id',
+                            backref='item', lazy='dynamic')
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
@@ -66,6 +95,10 @@ class User(UserMixin, db.Model):
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     about_me = db.Column(db.String(140))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    create_date = db.Column(db.DateTime, default=datetime.utcnow)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    admin = db.Column(db.Boolean, default=False)
+    superuser = db.Column(db.Boolean, default=False)
     followed = db.relationship(
         'User', secondary=followers,
         primaryjoin=(followers.c.follower_id == id),
@@ -113,6 +146,9 @@ class User(UserMixin, db.Model):
         own = Post.query.filter_by(user_id=self.id)
         return followed.union(own).order_by(Post.timestamp.desc())
 
+    def company_qoutes(self):
+        return Quote.query.filter_by(company_id=self.company_id).order_by(Quote.last_updated.desc())
+
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
             {'reset_password': self.id, 'exp': time() + expires_in},
@@ -143,6 +179,50 @@ class User(UserMixin, db.Model):
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
+
+
+class Client(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    name = db.Column(db.String(120))
+    representative_name = db.Column(db.String(120))
+    phone = db.Column(db.String(20))
+    email = db.Column(db.String(120))
+
+    db.UniqueConstraint('company_id', 'name', name='uix_company_clients')
+
+
+class Quote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.id'))
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    object_name = db.Column(db.String(120))
+    create_date = db.Column(db.DateTime, default=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Unit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(5), unique=True)
+    description = db.Column(db.String(200))
+
+
+class Item(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    name = db.Column(db.String(120))
+    description = db.Column(db.String(1000))
+    unit_id = db.Column(db.Integer, db.ForeignKey('unit.id'))
+    price_per_unit = db.Column(db.Numeric(10, 2))
+    is_category = db.Column(db.Boolean, default= False)
+
+
+quoteitems = db.Table(
+    'quoteitem',
+    db.Column('quote_id', db.Integer, db.ForeignKey('quote.id')),
+    db.Column('item_id', db.Integer, db.ForeignKey('item.id')),
+    db.Column('position', db.Integer, nullable=False)
+)
 
 
 class Post(SearchableMixin, db.Model):
