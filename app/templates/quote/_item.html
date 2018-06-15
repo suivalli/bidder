@@ -1,0 +1,27 @@
+<div id="item1" class="border border-primary shadow p-3 mb-5 bg-white rounded">
+    <form action method="post" role="form" >
+        <div class="form-row">
+            <div class="col-md-6">
+                <input type="text" class="form-control" placeholder="{{ _('Name') }}">
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control" placeholder="{{ _('Unit') }}">
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control" placeholder="{{ _('Price per unit') }}">
+            </div>
+            <div class="col-md-2">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" required="" id="is_category" name="is_category"
+                           value="y">
+                    <label class="form-check-label" for="is_category">{{ _('Is this a category?') }}</label>
+                </div>
+            </div>
+        </div>
+        <div class="form-row">
+             <div class="col">
+                <input type="text" class="form-control" placeholder="{{ _('Description') }}">
+             </div>
+        </div>
+    </form>
+</div>

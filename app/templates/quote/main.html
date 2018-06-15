@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                 {% include 'quote/_company.html' %}
+            </div>
+            <div class="col-md-6">
+                 {% include 'quote/_client.html' %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                {% include 'quote/_item.html' %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <p>Here we put the controls</p>
+            </div>
+            <div class="col-md-6">
+                <p>Here we put the sum, VAT and things</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+    $(function() {
+        $.ajax({
+            url: '{{ url_for("main.client_autocomplete") }}'
+            }).done(function (data){
+                $('#client_autocomplete').autocomplete({
+                    source: data,
+                    minLength: 2,
+                    select: function(e, ui) {
+                     get_client(ui.item.value);
+                    }
+                });
+            });
+        });
+
+    function get_client(client_name){
+        $.post('{{ url_for("main.client_api") }}', {name: client_name}
+        ).done(function (data) {
+            console.log(data)
+            $( '#repr_name' ).html(data.representative_name);
+            $( '#client_phone' ).html(data.phone);
+            $( '#client_email' ).html(data.email);
+        })
+    };
+    </script>
+{% endblock %}

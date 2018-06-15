@@ -4,47 +4,48 @@
     {% if title %}{{ title }} - Microblog{% else %}{{ _('Welcome to Microblog') }}{% endif %}
 {% endblock %}
 
+
+
 {% block navbar %}
-    <nav class="navbar navbar-default">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">Bidder</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
                 </button>
-                <a class="navbar-brand" href="{{ url_for('main.index') }}">Microblog</a>
-            </div>
-            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav">
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mr-auto">
                     {% if current_user.admin %}
-                        <li><a href="{{ url_for('admin.index') }}">{{ _('Admin home') }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.index') }}">{{ _('Admin home') }}</a></li>
                     {% endif %}
-                    <li><a href="{{ url_for('main.index') }}">{{ _('Home') }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index') }}">{{ _('Home') }}</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     {% if current_user.is_anonymous %}
-                    <li><a href="{{ url_for('auth.login') }}">{{ _('Login') }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">{{ _('Login') }}</a></li>
                     {% else %}
-                    <li><a href="{{ url_for('main.user', username=current_user.username) }}">{{ _('Profile') }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.user', username=current_user.username) }}">{{ _('Profile') }}</a></li>
                         {% if current_user.admin %}
-                            <li><a href="{{ url_for('admin.register_company') }}">{{ _('Create new company') }}</a></li>
-                            <li><a href="{{ url_for('auth.register') }}">{{ _('Add new user') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.register_company') }}">{{ _('Create new company') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.register') }}">{{ _('Add new user') }}</a></li>
                         {% elif current_user.superuser %}
-                            <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="ture"
+                            <li class="nav-item dropdown">
+                                <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                                    aria-expanded="false">Company stuff <span class="caret"></span></a>
                                 <ul class="dropdown-menu">
-                                    <li><a href="{{ url_for('auth.register') }}">{{ _('Add new user') }}</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.register') }}">{{ _('Add new user') }}</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.clients') }}">{{ _('View clients') }}</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.users') }}">{{ _('View users') }}</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.quotes') }}">{{ _('View quotes') }}</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.new_quote') }}">{{ _('New quote') }}</a></li>
                                 </ul>
                             </li>
                         {% endif %}
-                     <li><a href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a></li>
+                     <li class="nav_item"><a class="nav-link" href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a></li>
                     {% endif %}
                 </ul>
             </div>
-        </div>
+
     </nav>
 {% endblock %}
 
@@ -63,10 +64,16 @@
     </div>
 {% endblock %}
 
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+{% endblock %}
+
 {% block scripts %}
     {{ super() }}
     {{ moment.include_moment() }}
     {{ moment.lang(g.locale) }}
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
     <script>
         function translate(sourceElem, destElem, sourceLang, destLang) {
             $(destElem).html('<img src="{{ url_for('static', filename='loading.gif') }}">');
@@ -80,6 +87,8 @@
                 $(destElem).text("{{ _('Error: Could not contact server.') }}");
             });
         }
+
+
 
         $(function() {
             var timer = null;
@@ -125,3 +134,5 @@
         });
     </script>
 {% endblock %}
+
+

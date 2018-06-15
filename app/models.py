@@ -146,8 +146,14 @@ class User(UserMixin, db.Model):
         own = Post.query.filter_by(user_id=self.id)
         return followed.union(own).order_by(Post.timestamp.desc())
 
-    def company_qoutes(self):
+    def company_quotes(self):
         return Quote.query.filter_by(company_id=self.company_id).order_by(Quote.last_updated.desc())
+
+    def company_users(self):
+        return User.query.filter_by(company_id=self.company_id).order_by(User.username.asc())
+
+    def company_clients(self):
+        return Client.query.filter_by(company_id=self.company_id).order_by(Client.name.asc())
 
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
@@ -191,6 +197,15 @@ class Client(db.Model):
 
     db.UniqueConstraint('company_id', 'name', name='uix_company_clients')
 
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'representative_name': self.representative_name,
+            'phone': self.phone,
+            'email': self.email
+        }
+
 
 class Quote(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -201,20 +216,15 @@ class Quote(db.Model):
     create_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow)
 
-class Unit(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(5), unique=True)
-    description = db.Column(db.String(200))
-
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
     name = db.Column(db.String(120))
     description = db.Column(db.String(1000))
-    unit_id = db.Column(db.Integer, db.ForeignKey('unit.id'))
+    unit = db.Column(db.String(20))
     price_per_unit = db.Column(db.Numeric(10, 2))
-    is_category = db.Column(db.Boolean, default= False)
+    is_category = db.Column(db.Boolean, default=False)
 
 
 quoteitems = db.Table(
