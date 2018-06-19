@@ -1,14 +1,16 @@
 from datetime import datetime
 from flask import render_template, flash, redirect, url_for, request, g, \
-    jsonify, current_app, Response
+    jsonify, current_app, Response, make_response
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from app import db
 from app.main.forms import EditProfileForm, SearchForm, NewClientForm, NewQuoteForm, ClientSearchForm, ItemForm
-from app.models import User, Post, Notification, Quote, Company, Client
+from app.models import User, Post, Notification, Quote, Company, Client, Item
 from app.translate import translate
 from app.main import bp
+import pdfkit
 import logging
+import os
 
 @bp.before_app_request
 def before_request():
@@ -215,7 +217,8 @@ def new_quote():
         clientform=clientform,
         itemform=itemform,
         company=company,
-        clients=clients
+        clients=clients,
+        itemid=1
     )
 
 @bp.route('/client_autocomplete')
@@ -232,3 +235,93 @@ def client_api():
     if client is None:
         return jsonify(error=404)
     return jsonify(client.serialize())
+
+@bp.route('/item', methods=['POST'])
+@login_required
+def new_item():
+    return render_template('quote/_item.html', itemid=int(request.form["id"]))
+
+
+@bp.route('/quote', methods=['POST'])
+@login_required
+def save_quote():
+    logging.warning("Json is here")
+    quote = request.get_json(force=True)
+    company_id = quote["company_id"]
+    client_id = int(quote["client_id"])
+    items = quote["items"]
+    object_name = quote["object_name"]
+    total = float(quote["total"])
+    vat = float(quote["vat"])
+    totalwithwat = float(quote["totalwithvat"])
+    newquote = Quote(
+        client_id=client_id,
+        company_id=company_id,
+        user_id=current_user.id,
+        object_name=object_name,
+        total=total,
+        vat=vat,
+        totalwithvat=totalwithwat
+    )
+    db.session.add(newquote)
+    db.session.commit()
+    quote_id = newquote.id
+    for item in items:
+        if item["is_category"]:
+            newitem = Item(
+                quote_id=quote_id,
+                name=item["name"],
+                description=item["description"],
+                is_category=True
+            )
+        else:
+            newitem = Item(
+                quote_id=quote_id,
+                name=item["name"],
+                description=item["description"],
+                unit=item["unit"],
+                price_per_unit=float(item["price"]),
+                units=float(item["units"])
+            )
+        db.session.add(newitem)
+        db.session.commit()
+    return jsonify(error=200)
+
+
+
+@bp.route('/quotetest')
+def quotetest():
+    quotes = [quote.serialize() for quote in Quote.query.all()]
+    return jsonify(quotes)
+
+
+@bp.route('/itemtest')
+def itemtest():
+    items = [item.serialize() for item in Item.query.all()]
+    return jsonify(items)
+
+@bp.route('/quote/<id>')
+def pdftest(id):
+    quote = Quote.query.filter_by(id=id).first()
+    company = Company.query.filter_by(id=quote.company_id).first()
+    client = Client.query.filter_by(id=quote.client_id).first()
+    user = User.query.filter_by(id=quote.user_id).first()
+    rendered = render_template('quote/pdf.html',
+                           quote=quote,
+                           company=company,
+                           client=client,
+                           user=user
+                           )
+
+    config = pdfkit.configuration(wkhtmltopdf='C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe')
+    css = ['app/static/css/bootstrap.css']
+    options = {
+        '--viewport-size': '1024x768'
+    }
+    pdf = pdfkit.from_string(rendered, False, css=css, configuration=config, options=options)
+    print(pdf)
+
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = "inline; filename=test.pdf"
+    return response, 200

@@ -11,17 +11,19 @@
                  {% include 'quote/_client.html' %}
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12">
+        <div class="row" id="items">
                 {% include 'quote/_item.html' %}
-            </div>
         </div>
         <div class="row">
             <div class="col-md-6">
-                <p>Here we put the controls</p>
+                <button type="button" class="btn btn-primary " id="savequote">{{ _('Save the quote') }}</button>
+                <button type="button" class="btn btn-primary " id="makepdf">{{ _('Make PDF') }}</button>
+                <button type="button" class="btn btn-primary " id="makepdfandsend">{{ _('Make PDF and send') }}</button>
             </div>
             <div class="col-md-6">
-                <p>Here we put the sum, VAT and things</p>
+                <p><b>{{ _('Total: ') }}<span id="total"></span></b></p>
+                <p><b>{{ _('VAT: ') }}<span id="vat"></span></b></p>
+                <p><b>{{ _('Total with VAT: ') }}<span id="totalwithvat"></span></b></p>
             </div>
         </div>
     </div>
@@ -30,6 +32,11 @@
 {% block scripts %}
     {{ super() }}
     <script>
+    var g_itemid=1;
+    Decimal.set({
+    toExpPos: 100});
+
+
     $(function() {
         $.ajax({
             url: '{{ url_for("main.client_autocomplete") }}'
@@ -47,11 +54,168 @@
     function get_client(client_name){
         $.post('{{ url_for("main.client_api") }}', {name: client_name}
         ).done(function (data) {
-            console.log(data)
+            $( '#client_id').text(data.id);
             $( '#repr_name' ).html(data.representative_name);
             $( '#client_phone' ).html(data.phone);
             $( '#client_email' ).html(data.email);
         })
-    };
+    }
+
+    $(document).on("click", ".additem", (function() {
+        g_itemid++;
+        $.post('{{ url_for("main.new_item") }}', {id: g_itemid})
+            .done(function(data) {
+                $(data).appendTo("#items");
+            });
+        })
+    );
+
+    $(document).on("click", ".removeitem", (function() {
+        var itemid = $(this).closest(".item").attr("id").split("item")[1];
+        if (itemid != 1){
+            $("#item" + itemid).remove();
+        }
+        })
+    );
+
+    $(document).on("click", ".is_category", (function(){
+        var id = $(this).attr('id')[$(this).attr('id').length-1];
+        $("#name" + id).toggleClass("category");
+        $("#unit" + id).prop('disabled', function(i, v) {return !v; });
+        $("#price" + id).prop('disabled', function(i, v) {return !v; });
+        $("#units" + id).prop('disabled', function(i, v) {return !v; });
+        calculateTotals();
+    }));
+
+    $(document).on("keyup", ".unit", (function(){
+        if (this.value[0] === "m" || this.value[0] === "M"){
+            if (this.value.length === 2){
+                if (this.value[1] === "2"){
+                    this.value = this.value[0] + "²";
+                }
+                else if (this.value[1] === "3"){
+                    this.value = this.value[0] + "³";
+                }
+            }
+        }
+    }));
+
+    $(document).on("keyup", ".units, .price", function(){
+        var id = $(this).attr('id')[$(this).attr('id').length-1];
+        var noNaNs = true;
+        if (! isNaN($("#units" + id).val()) && ($("#units" + id).val() !== "")){
+            var units = new Decimal($("#units" + id).val());
+        } else {
+            noNaNs = false;
+        }
+        if (! isNaN($("#price" + id).val()) && ($("#price" + id).val() !== "")){
+            var price = new Decimal($("#price" + id).val());
+        } else {
+            noNaNs = false;
+        }
+        if (noNaNs){
+            $("#totalprice" + id).val(units.mul(price).toDecimalPlaces(2, Decimal.ROUND_UP).toString());
+            calculateTotals();
+        } else {
+            $("#totalprice" + id).val("{{ _('Total price') }}");
+        }
+    });
+
+    let g_total = new Decimal(0);
+    let g_vat = new Decimal(0);
+    let g_totalwithvat = new Decimal(0);
+
+    function calculateTotals(){
+        g_total = new Decimal(0);
+        var noNaNs = true;
+        $(".units").each(function(){
+            var id = $(this).attr('id')[$(this).attr('id').length-1];
+            if (! $("#is_category" + id).is(":checked")){
+                if (! isNaN($("#units" + id).val()) && ($("#units" + id).val() !== "")){
+                    var unit = new Decimal($(this).val());
+                } else{
+                    noNaNs = false;
+                }
+                 if (! isNaN($("#price" + id).val()) && ($("#price" + id).val() !== "")){
+                    var price = new Decimal($("#price" + id).val());
+                } else {
+                    noNaNs = false;
+                }
+                if (noNaNs){
+                    var value = unit.mul(price);
+                    g_total = g_total.add(value);
+                }
+            }
+        });
+        if (noNaNs){
+            g_vat = g_total.mul(0.2);
+            g_totalwithvat = g_total.add(g_vat);
+            $("#total").text(g_total.toDecimalPlaces(2, Decimal.ROUND_UP).toString() + " EUR");
+            $("#vat").text(g_vat.toDecimalPlaces(2, Decimal.ROUND_UP).toString() + " EUR");
+            $("#totalwithvat").text(g_totalwithvat.toDecimalPlaces(2, Decimal.ROUND_UP).toString() + " EUR");
+        } else {
+            $("#total").text("");
+            $("#vat").text("");
+            $("#totalwithvat").text("");
+        }
+    }
+
+
+
+    $(document).on("click", "#savequote", (function() {
+        var company_id  = {{ current_user.company_id }};
+        var client_id = $("#client_id").text();
+        var object_name = $("#object_name").val();
+        var items = [];
+        $(".item").each(function(){
+            var id = $(this).attr('id')[$(this).attr('id').length-1];
+            if (! isNaN($("#units" + id).val()) && ($("#units" + id).val() !== "")){
+                var units = new Decimal($("#units" + id).val());
+                }
+            if (! isNaN($("#price" + id).val()) && ($("#price" + id).val() !== "")) {
+                var price = new Decimal($("#price" + id).val());
+            }
+            var is_category = $("#is_category" + id).prop("checked");
+            if (!is_category){
+                var item = {
+                    name: $("#name" + id).val(),
+                    unit: $("#unit" + id).val(),
+                    price: price.toDecimalPlaces(2, Decimal.ROUND_UP).toString(),
+                    units: units.toDecimalPlaces(2, Decimal.ROUND_UP).toString(),
+                    is_category: $("#is_category" + id).prop("checked"),
+                    description: $("#description" + id).val()
+                };
+            } else {
+                var item = {
+                    name: $("#name" + id).val(),
+                    is_category: $("#is_category" + id).prop("checked"),
+                    description: $("#description" + id).val()
+                };
+            }
+            items.push(item);
+        })
+        var total = g_total.toDecimalPlaces(2, Decimal.ROUND_UP).toString();
+        var vat = g_vat.toDecimalPlaces(2, Decimal.ROUND_UP).toString();
+        var totalwithvat = g_totalwithvat.toDecimalPlaces(2, Decimal.ROUND_UP).toString();
+        var quote = {
+            company_id: company_id,
+            client_id: client_id,
+            object_name: object_name,
+            items: items,
+            total: total,
+            vat: vat,
+            totalwithvat: totalwithvat
+        };
+        console.log(JSON.stringify(quote));
+        $.ajax({
+            url: '{{ url_for("main.save_quote") }}',
+            type: 'POST',
+            data: JSON.stringify(quote),
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8"
+        });
+
+        })
+    );
     </script>
 {% endblock %}

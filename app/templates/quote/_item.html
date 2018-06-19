@@ -1,27 +1,39 @@
-<div id="item1" class="border border-primary shadow p-3 mb-5 bg-white rounded">
-    <form action method="post" role="form" >
-        <div class="form-row">
-            <div class="col-md-6">
-                <input type="text" class="form-control" placeholder="{{ _('Name') }}">
-            </div>
-            <div class="col-md-2">
-                <input type="text" class="form-control" placeholder="{{ _('Unit') }}">
-            </div>
-            <div class="col-md-2">
-                <input type="text" class="form-control" placeholder="{{ _('Price per unit') }}">
-            </div>
-            <div class="col-md-2">
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" required="" id="is_category" name="is_category"
-                           value="y">
-                    <label class="form-check-label" for="is_category">{{ _('Is this a category?') }}</label>
+<div id="{{ "item" ~ itemid }}" class="col-md-12 item">
+    <div class="border border-primary shadow p-3 mb-5 bg-white rounded">
+        <form action method="post" role="form" >
+            <div class="form-row">
+                <div class="col-md-5">
+                    <input id="{{ "name" ~ itemid }}" type="text" class="form-control name"  placeholder="{{ _('Name') }}">
+                </div>
+                <div class="col-md-1">
+                    <input id="{{ "unit" ~ itemid }}" type="text" class="form-control unit" placeholder="{{ _('Unit') }}">
+                </div>
+                <div class="col-md-1">
+                    <input type="number" class="form-control price" id="{{ "price" ~ itemid }}" placeholder="{{ _('Price per unit') }}">
+                </div>
+                <div class="col-md-1">
+                    <input type="number" class="form-control units" id="{{ "units" ~ itemid }}" placeholder="{{ _('Units') }}">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" disabled class="form-control totalprice" id="{{ "totalprice" ~ itemid }}" placeholder="{{ _('Total price') }}">
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input is_category" type="checkbox" required="" id="{{ "is_category" ~ itemid }}" name="is_category"
+                               value="n">
+                        <label class="form-check-label" for="is_category">{{ _('Is this a category?') }}</label>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="form-row">
-             <div class="col">
-                <input type="text" class="form-control" placeholder="{{ _('Description') }}">
-             </div>
-        </div>
-    </form>
+            <div class="form-row">
+                 <div class="col">
+                    <input type="text" id="{{ "description" ~ itemid }}"  class="form-control" placeholder="{{ _('Description') }}">
+                 </div>
+                <div class="col1">
+                    <button type="button" class="btn btn-primary additem" id="{{ "newitem" ~ (itemid + 1) }}">{{ _('Add new') }}</button>
+                    <buton type="button" class="btn btn-danger removeitem">{{ _('Remove') }}</buton>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>

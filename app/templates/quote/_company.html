@@ -1,4 +1,4 @@
-<h3>{{ _('Client\'s information') }}</h3>
+<h3>{{ _('Company\'s information') }}</h3>
 <table class="table table-striped">
     <tr>
         <td>{{ _('Name') }}</td>
@@ -27,5 +27,9 @@
     <tr>
         <td>{{ _('Address') }}</td>
         <td>{{ company.address + ', ' + company.city + ', ' + company.state }}</td>
+    </tr>
+    <tr>
+        <td>{{ _('Object name') }}</td>
+        <td> <input type="text" class="form-control" id="object_name"></td>
     </tr>
 </table>

@@ -83,8 +83,7 @@ class Company(db.Model):
                               backref='client', lazy='dynamic')
     quotes = db.relationship('Quote', foreign_keys='Quote.company_id',
                              backref='quote', lazy='dynamic')
-    items = db.relationship('Item', foreign_keys='Item.company_id',
-                            backref='item', lazy='dynamic')
+
 
 
 class User(UserMixin, db.Model):
@@ -215,24 +214,48 @@ class Quote(db.Model):
     object_name = db.Column(db.String(120))
     create_date = db.Column(db.DateTime, default=datetime.utcnow)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+    total = db.Column(db.Numeric(10, 2))
+    vat = db.Column(db.Numeric(10, 2))
+    totalwithvat = db.Column(db.Numeric(10, 2))
+
+    items = db.relationship('Item', foreign_keys='Item.quote_id',
+                            backref='item', lazy='dynamic')
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'object_name': self.object_name,
+            'company_id': self.company_id,
+            'total': str(self.total),
+            'vat': str(self.vat),
+            'totalwithvat': str(self.totalwithvat),
+            'items': [item.serialize() for item in self.items]
+        }
 
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey('company.id'))
+    quote_id = db.Column(db.Integer, db.ForeignKey('quote.id'))
     name = db.Column(db.String(120))
     description = db.Column(db.String(1000))
     unit = db.Column(db.String(20))
     price_per_unit = db.Column(db.Numeric(10, 2))
+    units = db.Column(db.Numeric(10, 2))
     is_category = db.Column(db.Boolean, default=False)
 
+    def serialize(self):
+        return {
+            'id': self.id,
+            'quote_id': self.quote_id,
+            'name': self.name,
+            'description': self.description,
+            'unit': self.unit,
+            'price_per_unit': str(self.price_per_unit),
+            'units': str(self.units),
+            'is_category': self.is_category
+        }
 
-quoteitems = db.Table(
-    'quoteitem',
-    db.Column('quote_id', db.Integer, db.ForeignKey('quote.id')),
-    db.Column('item_id', db.Integer, db.ForeignKey('item.id')),
-    db.Column('position', db.Integer, nullable=False)
-)
+
 
 
 class Post(SearchableMixin, db.Model):

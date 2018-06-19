@@ -8,7 +8,7 @@ from app.models import Company
 class CompanyRegistrationForm(FlaskForm):
     name = StringField(_l('Company name'), validators=[DataRequired()])
     vat_code = StringField(_l('VAT code'), validators=[DataRequired()])
-    reg_code = StringField(_l('VAT code'), validators=[DataRequired()])
+    reg_code = StringField(_l('Registration code'), validators=[DataRequired()])
 
     email = StringField(_l('Email'), validators=[DataRequired(), Email()])
     url = StringField(_l('Company homepage URL'))

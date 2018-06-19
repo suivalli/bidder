@@ -1,0 +1,91 @@
+{% extends 'bootstrap/base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block content %}
+    <div class="container">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-striped">
+                        <tr>
+                            <td>{{ _('Name') }}</td>
+                            <td>{{ company.name }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('VAT code') }}</td>
+                            <td>{{ company.vat_code }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Registration code') }}</td>
+                            <td>{{ company.reg_code }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Email') }}</td>
+                            <td>{{ company.email }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Homepage') }}</td>
+                            <td>{{ company.url }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Phone') }}</td>
+                            <td>{{ company.phone }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Address') }}</td>
+                            <td>{{ company.address + ', ' + company.city + ', ' + company.state }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Object name') }}</td>
+                            <td> {{ quote.object_name }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-striped">
+                        <tr>
+                            <td>{{ _('Client\'s name') }}</td>
+                            <td>{{ client.name }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Representative\'s name') }}</td>
+                            <td>{{ client.representative_name }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Phone') }}</td>
+                            <td>{{ client.representative_name }}</td>
+                        </tr>
+                        <tr>
+                            <td>{{ _('Email') }}</td>
+                            <td>{{ client.email }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="row" id="items">
+
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                </div>
+                <div class="col-md-6">
+                    <p><b>{{ _('Total: ') }}<span id="total">{{ quote.total }}</span></b></p>
+                    <p><b>{{ _('VAT: ') }}<span id="vat">{{ quote.vat }}</span></b></p>
+                    <p><b>{{ _('Total with VAT: ') }}<span id="totalwithvat">
+                        {{ quote.totalwithvat }}
+                    </span></b></p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for("static", filename="css/bootstrap.css") }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for("static", filename="styles.css") }}">
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for("static", filename="js/bootstrap.js") }}"></script>
+{% endblock %}
